@@ -10,7 +10,7 @@ typedef struct Node
     int rank;
 } Node;
 
-// ôóíêöèÿ ïîèñêà äëÿ ñèñòåìû íåïåðåñåêàþùèõñÿ ìíîæåñòâ
+// функция поиска для системы непересекающихся множеств
 Node* find(Node* x)
 {
     if (x->parent != x)  x->parent = find(x->parent);
@@ -23,7 +23,7 @@ struct pixel
     unsigned char R, G, B, alpha;
 };
 
-// ôóíêöèÿ, êîòîðàÿ ÷èòàåò èçîáðàæåíèå è âîçâðàùàåò ìàññèâ ïèêñåëåé. Ôóíêöèÿ èç ôàéëà load.png
+// функция, которая читает изображение и возвращает массив пикселей. Функция из файла load.png
 char* load_png_file(const char *filename, int *width, int *height)
 {
     unsigned char *image = NULL;
@@ -40,67 +40,67 @@ char* load_png_file(const char *filename, int *width, int *height)
 
 void applySobelFilter(unsigned char *image, int width, int height)
 {
-    // ñîçäàåì äâå ìàòðèöû(ÿäðà ñâåðòêè), êîòîðûå áóäåì ïðèìåíÿòü ê êàæäîìó ïèêñåëþ(÷èñëà âçÿòû èç âèêèïåäèè)
+    // создаем две матрицы(ядра свертки), которые будем применять к каждому пикселю(числа взяты из википедии)
     int gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int gy[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
 
-    // ìàññèâ èòîãîâûõ öâåòîâ êàæäîãî ïèêñåëÿ
+    // массив итоговых цветов каждого пикселя
     unsigned char *result = malloc(width * height * 4 * sizeof(unsigned char));
 
-    // ïðîõîäèìñÿ ïî êàæäîìó ïèêñåëþ, íà÷èíàÿ íå ñ íóëåâîãî, à ñ ïåðâîãî
-    // ( òàê êàê â àëãîðèòìå äëÿ êàæäîãî ïèêñåëÿ äîëæíû áûòü âñå ñîñåäè:
-    // è ñâåðõó, è ñíèçó, è ñïðàâà, è ñëåâà
-    // çàêàí÷èâàåì òàêæå íà ïðåäïîñëåäíåì
+    // проходимся по каждому пикселю, начиная не с нулевого, а с первого
+    // ( так как в алгоритме для каждого пикселя должны быть все соседи:
+    // и сверху, и снизу, и справа, и слева
+    // заканчиваем также на предпоследнем
     for (int y = 1; y < height - 1; y++)
     {
         for (int x = 1; x < width - 1; x++)
         {
             int sumX = 0, sumY = 0;
-            // â àëãîðèòìå íàì íóæíî íàéòè ãðàäèåíò,
-            // òàê ÷òî íàõîäèì ïðîèçâîäíûå ïî X è ïî Y
+            // в алгоритме нам нужно найти градиент,
+            // так что находим производные по X и по Y
             for (int dy = -1; dy <= 1; dy++)
             {
                 for (int dx = -1; dx <= 1; dx++)
                 {
-                    // òàê êàê ó íàñ íå ìàòðèöà ïèêñåëåé, à ìàññèâ, â êîòîðîì ïèêñåëè ëåæàò ñâåðõó
-                    // (ïðè÷åì ñíà÷àëà â ìàññèâå ëåæàò âñå ïèêñåëè ñ îäèíàêîâîé âûñîòîé),
-                    // òî íàì íóæíî âû÷èñëÿòü, çíàÿ êîîðäèíàòó ïèêñåëÿ, ïîëîæåíèå åãî â ìàññèâå
-                    // ( ýòî áóäåò index)
+                    // так как у нас не матрица пикселей, а массив, в котором пиксели лежат сверху
+                    // (причем сначала в массиве лежат все пиксели с одинаковой высотой),
+                    // то нам нужно вычислять, зная координату пикселя, положение его в массиве
+                    // ( это будет index)
                     int index = ((y+dy) * width + (x+dx)) * 4;
 
-                    // çàìåíèòü íàçâàíèå gray íà öâåò
+                   // заменить название gray на цвет
                     int gray = (image[index] + image[index + 1] + image[index + 2]) / 3;
 
-                    // c ïîìîùüþ ìàòðèöû íàõîäèì ïðîèçâîäíûå ôóíêöèè ÿðêîñòè ïèêñåëÿ
+                    // c помощью матрицы находим производные функции яркости пикселя
                     sumX += gx[dy + 1][dx + 1] * gray;
                     sumY += gy[dy + 1][dx + 1] * gray;
                 }
             }
 
-            // äëèíà ãðàäèåíòà
+            // длина градиента
             int magnitude = sqrt(sumX * sumX + sumY * sumY);
-            // íîðìèðîâêà äëèíû
+            // нормировка длины
             if (magnitude > 255) magnitude = 255;
 
-            int resultIndex = (y * width + x) * 4; // îïðåäåëèëè èíäåêñ â ìàññèâå
+            int resultIndex = (y * width + x) * 4; // определили индекс в массиве
 
             result[resultIndex] = (unsigned char)magnitude;
             result[resultIndex + 1] = (unsigned char)magnitude;
             result[resultIndex + 2] = (unsigned char)magnitude;
-            result[resultIndex + 3] = image[resultIndex + 3]; // ïðîçðà÷íîñòü íå ìåíÿåì
+            result[resultIndex + 3] = image[resultIndex + 3]; // прозрачность не меняем
         }
     }
 
-    //ïðåîáðàçîâàíèå ìàññèâà öâåòîâ â óæå íîâîå, âûäåëåííîå èçîáðàæåíèå
+    //преобразование массива цветов в уже новое, выделенное изображение
     for (int i = 0; i < width * height * 4; i++)
     {
         image[i] = result[i];
     }
-    // î÷èñòêà ìàññèâà
+    
     free(result);
 }
 
-// ôóíêöèÿ îáúåäèíåíèÿ äëÿ ñèñòåìû íåïåðåñåêàþùèõñÿ ìíîæåñòâ(áóäåò èñïîëüçîâàòüñÿ â ïîèñêå êîìïîíåíò ñâÿçíîñòè)
+// функция объединения для системы непересекающихся множеств(будет использоваться в поиске компонент связности)
 void union_set(Node* x, Node* y, double epsilon)
 {
     if (x->r < 40 && y->r < 40)  return;
@@ -131,7 +131,7 @@ Node* create_graph(const char *filename, int *width, int *height)
 
     int error = lodepng_decode32_file(&image, width, height, filename);
 
-    // åñëè íå ñìîãëè ñ÷èòàòü âûâîäèì îøèáêó
+    // если не смогли считать выводим ошибку
     if (error)
     {
         printf("error %u: %s\n", error, lodepng_error_text(error));
@@ -140,7 +140,7 @@ Node* create_graph(const char *filename, int *width, int *height)
 
     Node* nodes = malloc(*width * *height * sizeof(Node));
 
-    // ïðîõîäèìñÿ ïî êàæäîìó ïèêñåëþ è åãî çàñîâûâàåì â ãðàô
+    // проходимся по каждому пикселю и его засовываем в граф
     for (unsigned y = 0; y < *height; ++y)
     {
         for (unsigned x = 0; x < *width; ++x)
@@ -165,7 +165,7 @@ Node* create_graph(const char *filename, int *width, int *height)
     return nodes;
 }
 
-// ïîèñê êîìïîíåíò ñâÿçíîñòè
+// поиск компонент связности
 void find_components(Node* nodes, int width, int height, double epsilon)
 {
     for (int y = 0; y < height; y++)
@@ -198,24 +198,24 @@ void free_graph(Node* nodes)
     free(nodes);
 }
 
-// ïîêðàñêà êîìïîíåíò ñâçÿíîñòè
+// покраска компонент свзяности
 void color_components_and_count(Node* nodes, int width, int height)
 {
     unsigned char* output_image = malloc(width * height * 4 * sizeof(unsigned char));
 
-    // èçíà÷àëüíî êàæäàÿ òî÷êà - îòäåëüíàÿ êîìïîíåíòà ñâÿçíîñòè
+    // изначально каждая точка - отдельная компонента связности
     int* component_sizes = calloc(width * height, sizeof(int));
 
-    // êîë-âî êîìïîíåíò
+    // кол-во компонент
     int total_components = 0;
 
-    // ïðîõîäèìñÿ ïî êàæäîìó ïèêñåëþ è ãîâîðèì, åñëè êîìïîíåíòà ìàëåíüêàÿ òî óäàëÿåì åå
+    // проходимся по каждому пикселю и говорим, если компонента маленькая то удаляем ее
     for (int i = 0; i < width * height; i++)
     {
-        Node* p = find(&nodes[i]); // èùåì êîìïîíåíòû äëÿ êàæäîãî ïèêñåëÿ
+        Node* p = find(&nodes[i]); // ищем компоненты для каждого пикселя
         if (p == &nodes[i])
         {
-            // åñëè ìàëåíüêàÿ êîìïîíåíòà íå ó÷èòûâàåì åå
+            // если маленькая компонента не учитываем ее
             if (component_sizes[i] < 3)
             {
                 p->r = 0;
@@ -224,7 +224,7 @@ void color_components_and_count(Node* nodes, int width, int height)
             }
             else
             {
-                // ðàíäîìíî êðàñèì öâåòà ïèêñåëÿ
+                // рандомно красим цвета пикселя
                 p->r = rand() % 256;
                 p->g = rand() % 256;
                 p->b = rand() % 256;
@@ -239,7 +239,7 @@ void color_components_and_count(Node* nodes, int width, int height)
     }
 
     char *output_filename = "C:\\Users\\user\\OneDrive\\Ðàáî÷èé ñòîë\\Áîëüøàÿ çàäà÷à\\Ðóêà_output_2.png";
-    // ñîõðàíÿåì èòîãîâóþ êàðòèíêó
+    // сохраняем итоговую картинку
     lodepng_encode32_file(output_filename, output_image, width, height);
     free(output_image);
     free(component_sizes);
