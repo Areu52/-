@@ -239,7 +239,7 @@ void color_components_and_count(Node* nodes, int width, int height)
     }
 
     //(сюда нужно вставить либо ссылку на Рука_output_2.png, либо на Голова_output_2.png)
-    char *output_filename = "C:\\Users\\user\\OneDrive\\Ðàáî÷èé ñòîë\\Áîëüøàÿ çàäà÷à\\Ðóêà_output_2.png";
+    char *output_filename = "C:\\Users\\user\\OneDrive\\Рабочий стол\\Большая задача\\Рука_output_2.png";
     // сохраняем итоговую картинку
     lodepng_encode32_file(output_filename, output_image, width, height);
     free(output_image);
@@ -256,7 +256,7 @@ int main()
     int w = 0, h = 0; // // w - ширина, h - высота
 
     // читаем изначальную картинку и засовываем в файл(сюда нужно вставить либо ссылку на Рука_input.png, либо на Голова_input.png)
-    char *filename = "C:\\Users\\user\\OneDrive\\Ðàáî÷èé ñòîë\\Áîëüøàÿ çàäà÷à\\Ðóêà_input.png";
+    char *filename = "C:\\Users\\user\\OneDrive\\Рабочий стол\\Большая задача\\Рука_input.png";
 
     // в массиве picture лежат пикслели RGB и прозрачность(на каждый пиксель 4 эл-та массива)
     char *picture = load_png_file(filename, &w, &h);
@@ -265,7 +265,7 @@ int main()
     applySobelFilter(picture, w, h);
 
     // засовываем итоговую картинку с выделением в output_filename(сюда нужно вставить либо ссылку на Рука_output_1.png, либо на Голова_output_1.png)
-    char *output_filename = "C:\\Users\\user\\OneDrive\\Ðàáî÷èé ñòîë\\Áîëüøàÿ çàäà÷à\\Ðóêà_output_1.png";
+    char *output_filename = "C:\\Users\\user\\OneDrive\\Рабочий стол\\Большая задача\\Рука_output_1.png";
 
     // сохраняем в файл output_filename с помощью функции из lodepng.h
     lodepng_encode32_file(output_filename, picture, w, h);
