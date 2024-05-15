@@ -263,7 +263,7 @@ int main()
     // фильтр, который как раз и выделяет границы
     applySobelFilter(picture, w, h);
 
-    // засовываем итоговую картинку с выделением в output_filename
+    // засовываем итоговую картинку с выделением в output_filename(сюда нужно вставить либо ссылку на Рука_output_1.png)
     char *output_filename = "C:\\Users\\user\\OneDrive\\Ðàáî÷èé ñòîë\\Áîëüøàÿ çàäà÷à\\Ðóêà_output_1.png";
 
     // сохраняем в файл output_filename с помощью функции из lodepng.h
