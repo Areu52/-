@@ -316,11 +316,10 @@ int main()
     // покраска компонент в рандомные цвета
     color_components_and_count(nodes, w, h);
     colorComponents(picture, w, h, 20);
-    lodepng_encode32_file("Palm_output_2.png", picture, w, h);
+    lodepng_encode32_file("Palm_output_3.png", picture, w, h);
     free_graph(nodes);
     // чистим массив цветов
     free(picture);
 
     return 0;
-    // итоговый ответ либо в файле Рука_output_2.png, либо в Голова_output_2.png
 }
