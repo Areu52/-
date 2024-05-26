@@ -1,16 +1,11 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c11
-LIBS = -lm
+all: lodepng.o image.o
+	gcc *.o -o main
 
-all: image run
+image.o: image.c lodepng.h
+	gcc -c image.c
 
-image: main.c lodepng.c lodepng.h
-	$(CC) $(CFLAGS) -o image main.c lodepng.c $(LIBS)
-
-
-
-run: image
-	./image
+lodepng.o: lodepng.c lodepng.h
+	gcc -c lodepng.c
 
 clean:
-	rm -f coloring image
+	rm -f *.o
