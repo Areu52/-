@@ -1,4 +1,4 @@
-#include "lodepng.c"
+#include "lodepng.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,19 +24,16 @@ struct pixel
 };
 
 // функция, которая читает изображение и возвращает массив пикселей. Функция из файла load.png
-char* load_png_file(const char *filename, int *width, int *height)
-{
+char* load_png_file(const char *filename, int *width, int *height) {
     unsigned char *image = NULL;
     int error = lodepng_decode32_file(&image, width, height, filename);
-    if (error)
-    {
+    if (error) {
         printf("error %u: %s\n", error, lodepng_error_text(error));
         return NULL;
     }
 
-    return image;
+    return (image);
 }
-
 
 void applySobelFilter(unsigned char *image, int width, int height)
 {
@@ -68,7 +65,7 @@ void applySobelFilter(unsigned char *image, int width, int height)
                     // ( это будет index)
                     int index = ((y+dy) * width + (x+dx)) * 4;
 
-                   // заменить название gray на цвет
+                    // заменить название gray на цвет
                     int gray = (image[index] + image[index + 1] + image[index + 2]) / 3;
 
                     // c помощью матрицы находим производные функции яркости пикселя
@@ -96,7 +93,7 @@ void applySobelFilter(unsigned char *image, int width, int height)
     {
         image[i] = result[i];
     }
-    
+
     free(result);
 }
 
@@ -128,9 +125,9 @@ void union_set(Node* x, Node* y, double epsilon)
 Node* create_graph(const char *filename, int *width, int *height)
 {
     unsigned char *image = NULL;
-
+//    char *picture = load_png_file(filename, &w, &h);
     int error = lodepng_decode32_file(&image, width, height, filename);
-
+    printf("%d", error);
     // если не смогли считать выводим ошибку
     if (error)
     {
@@ -241,11 +238,47 @@ void color_components_and_count(Node* nodes, int width, int height)
     //(сюда нужно вставить либо ссылку на Рука_output_2.png, либо на Голова_output_2.png)
     char *output_filename = "Palm_output_2.png";
     // сохраняем итоговую картинку
-    lodepng_encode32_file(output_filename, output_image, width, height);
+//    lodepng_encode32_file(output_filename, output_image, width, height);
     free(output_image);
     free(component_sizes);
 }
 
+
+
+void floodFillRecursive(unsigned char* image, int x, int y, int newColor1, int newColor2, int newColor3, int oldColor, int width, int height) {
+    if(x < 0 || x >= width || y < 0 || y >= height)
+        return;
+
+    int resultIndex = (y * width + x) * 4;
+    if(image[resultIndex] > oldColor)
+        return;
+
+    image[resultIndex] = newColor1;
+    image[resultIndex + 1] = newColor2;
+    image[resultIndex + 2] = newColor3;
+
+    floodFillRecursive(image, x+1, y, newColor1, newColor2, newColor3, oldColor, width, height);
+    floodFillRecursive(image, x-1, y, newColor1, newColor2, newColor3, oldColor, width, height);
+    floodFillRecursive(image, x, y+1, newColor1, newColor2, newColor3, oldColor, width, height);
+    floodFillRecursive(image, x, y-1, newColor1, newColor2, newColor3, oldColor, width, height);
+}
+
+
+void colorComponents(unsigned char* image, int width, int height, int epsilon) {
+    int color1, color2, color3;
+    for(int y = 1; y < height - 1; y++) {
+        for(int x = 1; x < width - 1; x++) {
+            if(image[4 * (y * width + x)] < epsilon) {
+                color1 = rand() % (255 - epsilon * 2) + epsilon * 2;
+                color2 = rand() % (255 - epsilon * 2) + epsilon * 2;
+                color3 = rand() % (255 - epsilon * 2) + epsilon * 2;
+                floodFillRecursive(image, x, y, color1, color2, color3, epsilon, width, height);
+
+            }
+
+        }
+    }
+}
 
 
 
@@ -256,22 +289,19 @@ int main()
     int w = 0, h = 0; // // w - ширина, h - высота
 
     // читаем изначальную картинку и засовываем в файл(сюда нужно вставить либо ссылку на Рука_input.png, либо на Голова_input.png)
-    char *filename = "Palm_input,png";
+    char *filename = "Palm_input.png";
 
     // в массиве picture лежат пикслели RGB и прозрачность(на каждый пиксель 4 эл-та массива)
     char *picture = load_png_file(filename, &w, &h);
-
     // фильтр, который как раз и выделяет границы
     applySobelFilter(picture, w, h);
 
     // засовываем итоговую картинку с выделением в output_filename(сюда нужно вставить либо ссылку на Рука_output_1.png, либо на Голова_output_1.png)
-    char *output_filename = "Palm_output_1.png";
 
     // сохраняем в файл output_filename с помощью функции из lodepng.h
+    char *output_filename = "Palm_output_1.png";
     lodepng_encode32_file(output_filename, picture, w, h);
 
-    // чистим массив цветов
-    free(picture);
 
     // эта часть кода красит компоненты связности
 
@@ -279,14 +309,17 @@ int main()
     Node* nodes = create_graph(output_filename, &w, &h);
 
     double epsilon = 50.0; // Любое не такое большое число. Чем больше эпсилон, тем более разные по цвету пикслели будут засунуты в одну компоненту
-    
+
     // функция поиска компонент
     find_components(nodes, w, h, epsilon);
 
     // покраска компонент в рандомные цвета
     color_components_and_count(nodes, w, h);
-
+    colorComponents(picture, w, h, 20);
+    lodepng_encode32_file("Palm_output_2.png", picture, w, h);
     free_graph(nodes);
+    // чистим массив цветов
+    free(picture);
 
     return 0;
     // итоговый ответ либо в файле Рука_output_2.png, либо в Голова_output_2.png
